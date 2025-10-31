@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>DYANSHWAR VISYALAYA & JR.COLLEGE (WARUD CHAKRPAN) SENGAON — Results</title>
+
+<!-- Bootstrap -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<!-- jsPDF + autoTable -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+
+<style>
+  body{background: linear-gradient(180deg,#f7fbff,#eef6ff); font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans', Arial;}
+  .card{border-radius:12px; box-shadow:0 6px 18px rgba(14,30,60,0.06)}
+  .muted{color:#6b7280}
+  .center-max{max-width:1150px;margin:0 auto}
+  .notice{background:#fffbe6;border-left:4px solid #ffcd39;padding:10px;border-radius:6px;margin-bottom:8px}
+  .subject-row > *{vertical-align:middle}
+  .top-nav a{margin-right:14px;color:#0b5ed7;text-decoration:none}
+  .top-nav a:hover{text-decoration:underline}
+  .brand{display:flex;align-items:center;gap:12px}
+  .brand img{border-radius:8px}
+  .class-tab{cursor:pointer;padding:6px 12px;border-radius:8px}
+  .class-tab.active{background:#0d6efd;color:#fff}
+  .table-fixed { max-height:240px; overflow:auto; display:block; }
+  .small-input{padding:.35rem .5rem}
+</style>
+</head>
+<body>
+<div class="container py-4 center-max">
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="brand">
+      <img src="https://upload.wikimedia.org/wikipedia/en/2/2e/Maharashtra_State_Board_Logo.png" width="64" alt="logo">
+      <div>
+        <h4 class="mb-0">DYANSHWAR VISYALAYA & JR.COLLEGE ( WARUD CHAKRPAN) SENGAON</h4>
+        <div class="muted" style="font-size:0.9rem">Offline Demo — Results System (localStorage)</div>
+      </div>
+    </div>
+    <div class="top-nav">
+      <a href="#" onclick="navHome()">होम</a>
+      <a href="#" onclick="navStudent()">विद्यार्थी निकाल</a>
+      <a href="#" onclick="navTeacherLogin()">शिक्षक लॉगिन</a>
+    </div>
+  </div>
+
+  <!-- HOME -->
+  <div id="homeSection" class="mb-4">
+    <div class="row g-3">
+      <div class="col-lg-8">
+        <div class="card p-3 mb-3">
+          <h5 class="mb-2">📢 Notice Board</h5>
+          <div id="noticeBoard"></div>
+        </div>
+
+        <div class="card p-3">
+          <h6 class="mb-2">Result Declaration</h6>
+          <div id="declareInfo" class="muted"></div>
+        </div>
+      </div>
+
+      <div class="col-lg-4">
+        <div class="card p-3">
+          <h6 class="mb-2">Quick Links</h6>
+          <div><button class="btn btn-outline-primary w-100 mb-2" onclick="navStudent()">Check Result</button></div>
+          <div><button class="btn btn-outline-secondary w-100" onclick="navTeacherLogin()">Teacher Login</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- LEFT: Teacher/Login -->
+    <div class="col-lg-6">
+      <div id="teacherLoginCard" class="card p-3">
+        <h6>🔐 शिक्षक लॉगिन</h6>
+        <div class="d-flex gap-2 mt-2">
+          <input id="loginUser" class="form-control" placeholder="Username">
+          <input id="loginPass" type="password" class="form-control" placeholder="Password">
+          <button class="btn btn-primary" onclick="teacherLogin()">Login</button>
+        </div>
+        <div class="muted mt-2">Demo: <b>teacher</b> / <b>1234</b></div>
+      </div>
+
+      <div id="teacherPanel" class="card p-3 d-none">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h6 class="mb-0">👩‍🏫 शिक्षक पॅनेल</h6>
+          <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-outline-secondary" onclick="exportCSV()">Export CSV</button>
+            <button class="btn btn-sm btn-danger" onclick="clearAll()">Clear All</button>
+            <button class="btn btn-sm btn-outline-danger" onclick="logout()">Logout</button>
+          </div>
+        </div>
+
+        <!-- Set Declaration Date/Time -->
+        <div class="mb-3">
+          <label class="form-label small mb-1">Set Result Declaration Date & Time</label>
+          <div class="d-flex gap-2">
+            <input id="declInput" type="datetime-local" class="form-control">
+            <button class="btn btn-success" onclick="setDeclaration()">Set</button>
+          </div>
+          <div class="muted small mt-1">Set केल्यानंतर तो वेळ येईपर्यंत विद्यार्थी निकाल पाहू शकणार नाहीत.</div>
+        </div>
+
+        <!-- Add notice -->
+        <div class="mb-3">
+          <label class="form-label small mb-1">Add Notice</label>
+          <div class="d-flex gap-2">
+            <input id="noticeInput" class="form-control" placeholder="Notice message">
+            <button class="btn btn-primary" onclick="addNotice()">Add</button>
+          </div>
+          <div id="teacherNotices" class="mt-2"></div>
+        </div>
+
+        <hr/>
+
+        <!-- Class tabs (8-12) -->
+        <div class="mb-3">
+          <strong>Class-wise Tables</strong>
+          <div class="d-flex gap-2 mt-2">
+            <div class="class-tab active" data-class="8" onclick="selectClassTab(event)">8th</div>
+            <div class="class-tab" data-class="9" onclick="selectClassTab(event)">9th</div>
+            <div class="class-tab" data-class="10" onclick="selectClassTab(event)">10th</div>
+            <div class="class-tab" data-class="11" onclick="selectClassTab(event)">11th</div>
+            <div class="class-tab" data-class="12" onclick="selectClassTab(event)">12th</div>
+          </div>
+        </div>
+
+        <!-- Add/Edit Student Record (applies to selected class) -->
+        <div id="recordArea" class="mb-3">
+          <h6>Add / Edit Student Result</h6>
+          <div class="row g-2 mb-2">
+            <div class="col-3"><input id="f_class" class="form-control" readonly></div>
+            <div class="col-3"><input id="f_roll" class="form-control" placeholder="Roll No"></div>
+            <div class="col-6"><input id="f_name" class="form-control" placeholder="Student Name"></div>
+          </div>
+
+          <!-- NEW: Date of Birth -->
+          <div class="row g-2 mb-2">
+            <div class="col-6"><label class="form-label small mb-1">Date of Birth</label>
+              <input id="f_dob" type="date" class="form-control"></div>
+            <div class="col-6"><label class="form-label small mb-1">Gender (optional)</label>
+              <select id="f_gender" class="form-select"><option value="">Select</option><option>Male</option><option>Female</option><option>Other</option></select></div>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <strong>Subjects</strong>
+            <button class="btn btn-sm btn-success" onclick="addSubjectRow()">+ Add Subject</button>
+          </div>
+          <div id="f_subjects" class="mb-2"></div>
+
+          <div class="row g-2 mb-2">
+            <div class="col-4"><select id="f_status" class="form-select"><option>Pass</option><option>Fail</option></select></div>
+            <div class="col-8"><input id="f_remark" class="form-control" placeholder="Remark"></div>
+          </div>
+
+          <div class="d-flex gap-2">
+            <button class="btn btn-primary" onclick="saveStudent()">Save</button>
+            <button class="btn btn-outline-secondary" onclick="resetForm()">Reset</button>
+          </div>
+        </div>
+
+        <hr/>
+
+        <!-- Class-wise table display (for selected class) -->
+        <div>
+          <h6 class="mb-2">Selected Class Students</h6>
+          <div class="table-fixed">
+            <table class="table table-sm table-bordered mb-0">
+              <thead class="table-light"><tr><th>Roll</th><th>Name</th><th>DOB</th><th>Subjects</th><th>Action</th></tr></thead>
+              <tbody id="teacherTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Student Search & Result -->
+    <div class="col-lg-6">
+      <div class="card p-3">
+        <h6>🎓 विद्यार्थी निकाल पहा</h6>
+        <div class="row g-2">
+          <div class="col-6"><select id="s_class" class="form-select"><option value="">Select Class</option><option value="8">8th</option><option value="9">9th</option><option value="10">10th</option><option value="11">11th</option><option value="12">12th</option></select></div>
+          <div class="col-4"><input id="s_roll" class="form-control" placeholder="Roll No"></div>
+          <div class="col-2"><button class="btn btn-success w-100" onclick="studentSearch()">Search</button></div>
+        </div>
+
+        <div id="studentResult" class="mt-3 d-none">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <h5 id="sr_name" class="mb-0"></h5>
+              <div class="muted" id="sr_meta"></div>
+              <div id="sr_dob" class="muted small"></div>
+            </div>
+            <div class="text-end">
+              <button class="btn btn-outline-primary btn-sm" onclick="downloadPDF()">📄 Official PDF</button>
+              <button class="btn btn-outline-secondary btn-sm" onclick="showGraph()">📊 View Graph</button>
+            </div>
+          </div>
+
+          <div class="table-responsive mt-2">
+            <table class="table table-bordered">
+              <thead class="table-light"><tr><th>Subject</th><th>Marks</th><th>Out Of</th><th>Grade</th><th>Remark</th></tr></thead>
+              <tbody id="sr_table"></tbody>
+            </table>
+          </div>
+          <div class="mt-2 muted" id="sr_summary"></div>
+        </div>
+
+        <div id="notDeclared" class="mt-3 d-none text-warning"></div>
+        <div id="notFound" class="mt-3 d-none text-danger">निकाल सापडला नाही.</div>
+      </div>
+
+      <div class="card p-3 mt-3 muted">
+        <small>टीप: सर्व डेटा browser च्या localStorage मध्ये सेव्ह होतात. दुसऱ्या device वर data पाहण्यासाठी Export CSV वापरा.</small>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Graph Modal -->
+<div class="modal fade" id="graphModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header"><h6 class="modal-title">Subject-wise Graph</h6><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body"><div style="height:380px"><canvas id="chartCanvas"></canvas></div></div>
+      <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Close</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+/* ===== Storage keys ===== */
+const KEY_RECORDS = 'dv_records_v2';      // records array
+const KEY_NOTICES = 'dv_notices_v2';      // notices array
+const KEY_DECLARE = 'dv_declare_v2';      // datetime string
+
+/* ===== helpers ===== */
+function escapeHtml(s){ if(!s && s!==0) return ''; return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;'); }
+function loadRecords(){ return JSON.parse(localStorage.getItem(KEY_RECORDS) || '[]'); }
+function saveRecords(a){ localStorage.setItem(KEY_RECORDS, JSON.stringify(a)); }
+function loadNotices(){ return JSON.parse(localStorage.getItem(KEY_NOTICES) || '[]'); }
+function saveNotices(a){ localStorage.setItem(KEY_NOTICES, JSON.stringify(a)); }
+function loadDeclare(){ return localStorage.getItem(KEY_DECLARE) || ''; }
+function saveDeclare(s){ localStorage.setItem(KEY_DECLARE, s || ''); }
+function formatLocal(s){ if(!s) return 'Not set'; return new Date(s).toLocaleString(); }
+
+/* ===== classes list 8-12 ===== */
+const CLASSES = ['8','9','10','11','12'];
+let activeClass = '8';   // default selected tab
+let editing = null;      // {class,roll}
+let lastViewed = null;   // last student shown
+
+/* ===== init UI ===== */
+function init() {
+  document.getElementById('f_class').value = activeClass;
+  renderTeacherTable();
+  renderTeacherNotices();
+  renderHome();
+  addSubjectRow();
+  updateClassTabUI();
+}
+init();
+
+/* ===== Navigation helpers ===== */
+function navHome(){ window.scrollTo({top:0, behavior:'smooth'}); renderHome(); }
+function navStudent(){ document.getElementById('s_class').scrollIntoView({behavior:'smooth', block:'center'}); }
+function navTeacherLogin(){ document.getElementById('loginUser').scrollIntoView({behavior:'smooth', block:'center'}); }
+
+/* ===== Home render ===== */
+function renderHome(){
+  // notices
+  const nb = document.getElementById('noticeBoard');
+  const notes = loadNotices();
+  nb.innerHTML = '';
+  if(notes.length===0) nb.innerHTML = '<div class="muted">No notices</div>';
+  else { [...notes].reverse().forEach(n => {
+    const d = document.createElement('div'); d.className='notice';
+    d.innerHTML = `<div>${escapeHtml(n.text)}</div><div class="muted small mt-1">By: ${escapeHtml(n.by)} • ${new Date(n.time).toLocaleString()}</div>`;
+    nb.appendChild(d);
+  }); }
+
+  // declare info
+  const di = document.getElementById('declareInfo');
+  const dec = loadDeclare();
+  if(!dec) di.innerText = 'Result declaration वेळ set केलेली नाही.';
+  else {
+    const now = Date.now(), ts = new Date(dec).getTime();
+    if(now < ts) di.innerHTML = `Result will be declared on <b>${formatLocal(dec)}</b>`;
+    else di.innerHTML = `<b>Result declared at ${formatLocal(dec)}</b>`;
+  }
+}
+
+/* ===== Teacher login ===== */
+function teacherLogin(){
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value.trim();
+  if(u==='teacher' && p==='1234'){
+    document.getElementById('teacherLoginCard').classList.add('d-none');
+    document.getElementById('teacherPanel').classList.remove('d-none');
+    document.getElementById('f_class').value = activeClass;
+    document.getElementById('declInput').value = loadDeclare();
+    resetForm(); renderTeacherTable(); renderTeacherNotices();
+  } else alert('Invalid credentials');
+}
+function logout(){ location.reload(); }
+
+/* ===== Notices ===== */
+function addNotice(){
+  const text = document.getElementById('noticeInput').value.trim();
+  if(!text) return alert('Notice message भरा');
+  const arr = loadNotices(); arr.push({ text, by: 'Teacher', time: new Date().toISOString() }); saveNotices(arr);
+  document.getElementById('noticeInput').value = '';
+  renderTeacherNotices(); renderHome();
+}
+function renderTeacherNotices(){
+  const el = document.getElementById('teacherNotices'); const arr = loadNotices();
+  if(arr.length===0) el.innerHTML = '<div class="muted">No notices</div>';
+  else el.innerHTML = arr.map((n,i)=>`<div class="d-flex justify-content-between mb-1"><div class="small">${escapeHtml(n.text)}</div><div><button class="btn btn-sm btn-danger" onclick="deleteNotice(${i})">Delete</button></div></div>`).join('');
+}
+function deleteNotice(idx){ const arr = loadNotices(); arr.splice(idx,1); saveNotices(arr); renderTeacherNotices(); renderHome(); }
+
+/* ===== Declaration ===== */
+function setDeclaration(){
+  const val = document.getElementById('declInput').value;
+  if(!val) return alert('Date & Time select करा');
+  saveDeclare(val);
+  alert('Declaration time set: ' + formatLocal(val));
+  renderHome();
+}
+
+/* ===== Class tab select ===== */
+function selectClassTab(e){
+  const node = e.currentTarget || e.target;
+  const cls = node.getAttribute('data-class');
+  activeClass = cls;
+  document.getElementById('f_class').value = cls;
+  updateClassTabUI();
+  renderTeacherTable();
+  resetForm();
+}
+function updateClassTabUI(){
+  document.querySelectorAll('.class-tab').forEach(el => {
+    el.classList.toggle('active', el.getAttribute('data-class')===activeClass);
+  });
+}
+
+/* ===== Subjects rows (dynamic) ===== */
+function addSubjectRow(subject='', marks='', outOf='', grade='', remark=''){
+  const c = document.getElementById('f_subjects');
+  const row = document.createElement('div');
+  row.className = 'd-flex gap-2 mb-2 subject-row';
+  row.innerHTML = `
+    <input class="form-control form-control-sm" placeholder="Subject" style="flex:2" value="${escapeHtml(subject)}">
+    <input class="form-control form-control-sm" placeholder="Marks" style="flex:1" value="${escapeHtml(marks)}" type="number">
+    <input class="form-control form-control-sm" placeholder="Out Of" style="flex:1" value="${escapeHtml(outOf)}" type="number">
+    <input class="form-control form-control-sm" placeholder="Grade" style="flex:1" value="${escapeHtml(grade)}">
+    <input class="form-control form-control-sm" placeholder="Remark" style="flex:2" value="${escapeHtml(remark)}">
+    <button class="btn btn-sm btn-outline-danger" onclick="this.closest('.subject-row').remove()">✖</button>`;
+  c.appendChild(row);
+}
+
+/* reset form */
+function resetForm(){
+  document.getElementById('f_roll').value=''; document.getElementById('f_name').value=''; document.getElementById('f_dob').value=''; document.getElementById('f_gender').value='';
+  document.getElementById('f_status').value='Pass'; document.getElementById('f_remark').value=''; document.getElementById('f_subjects').innerHTML=''; addSubjectRow(); editing=null;
+}
+
+/* ===== Save student record (class = activeClass) ===== */
+function saveStudent(){
+  const cls = activeClass;
+  const roll = document.getElementById('f_roll').value.trim();
+  const name = document.getElementById('f_name').value.trim();
+  const dob = document.getElementById('f_dob').value; // ISO date
+  const gender = document.getElementById('f_gender').value;
+  const status = document.getElementById('f_status').value;
+  const remark = document.getElementById('f_remark').value.trim();
+  if(!cls||!roll||!name) return alert('Class, Roll आणि Name भरा');
+  const rows = Array.from(document.querySelectorAll('#f_subjects .subject-row'));
+  if(rows.length===0) return alert('एक subject जोडा');
+  const subjects = rows.map(r=>{
+    const inputs = r.querySelectorAll('input');
+    return { subject: inputs[0].value.trim(), marks: Number(inputs[1].value||0), outOf: Number(inputs[2].value||0), grade: inputs[3].value.trim(), remark: inputs[4].value.trim() };
+  });
+  const recs = loadRecords();
+  if(editing){
+    const idx = recs.findIndex(r=> r.class===editing.class && r.roll===editing.roll);
+    if(idx>=0) recs.splice(idx,1);
+  } else {
+    const exists = recs.findIndex(r=> r.class===cls && r.roll===roll);
+    if(exists>=0){
+      if(!confirm('Record exists — replace?')) return;
+      recs.splice(exists,1);
+    }
+  }
+  recs.push({ class: cls, roll, name, dob, gender, subjects, status, remark, updatedAt: new Date().toISOString() });
+  saveRecords(recs);
+  resetForm();
+  renderTeacherTable();
+  renderHome();
+  alert('Record saved');
+}
+
+/* ===== Render teacher table for activeClass ===== */
+function renderTeacherTable(){
+  const table = document.getElementById('teacherTable');
+  const recs = loadRecords().filter(r => r.class === activeClass).sort((a,b)=> (Number(a.roll) - Number(b.roll)));
+  if(recs.length===0){ table.innerHTML = '<tr><td colspan="5" class="text-center muted">No records for this class</td></tr>'; return; }
+  table.innerHTML = recs.map(r => {
+    const subj = r.subjects.map(s => `${s.subject}(${s.marks}/${s.outOf})`).join(', ');
+    return `<tr><td>${r.roll}</td><td>${escapeHtml(r.name)}</td><td>${r.dob?escapeHtml(r.dob):'-'}</td><td>${escapeHtml(subj)}</td><td><button class="btn btn-sm btn-warning me-1" onclick="editRecord('${r.class}','${r.roll}')">Edit</button><button class="btn btn-sm btn-danger" onclick="deleteRecord('${r.class}','${r.roll}')">Delete</button></td></tr>`;
+  }).join('');
+}
+
+/* ===== Edit/Delete functions ===== */
+function editRecord(cls, roll){
+  const rec = loadRecords().find(r=> r.class===cls && r.roll===roll);
+  if(!rec) return alert('Not found');
+  activeClass = cls; document.getElementById('f_class').value = cls; updateClassTabUI();
+  document.getElementById('f_roll').value = rec.roll; document.getElementById('f_name').value = rec.name;
+  document.getElementById('f_dob').value = rec.dob || ''; document.getElementById('f_gender').value = rec.gender || '';
+  document.getElementById('f_status').value = rec.status||'Pass'; document.getElementById('f_remark').value = rec.remark||'';
+  document.getElementById('f_subjects').innerHTML = '';
+  rec.subjects.forEach(s=> addSubjectRow(s.subject, s.marks, s.outOf, s.grade, s.remark));
+  editing = { class: rec.class, roll: rec.roll };
+  window.scrollTo({ top: 0, behavior:'smooth' });
+}
+function deleteRecord(cls, roll){
+  if(!confirm(`Delete Class ${cls} Roll ${roll}?`)) return;
+  let recs = loadRecords(); recs = recs.filter(r=> !(r.class===cls && r.roll===roll)); saveRecords(recs);
+  renderTeacherTable(); renderHome(); alert('Deleted');
+}
+
+/* ===== Student search & render ===== */
+function studentSearch(){
+  const cls = document.getElementById('s_class').value.trim();
+  const roll = document.getElementById('s_roll').value.trim();
+  document.getElementById('notFound').classList.add('d-none');
+  document.getElementById('notDeclared').classList.add('d-none');
+  document.getElementById('studentResult').classList.add('d-none');
+  if(!cls||!roll) return alert('Class आणि Roll भरा');
+
+  const dec = loadDeclare();
+  if(!dec){ document.getElementById('notDeclared').classList.remove('d-none'); document.getElementById('notDeclared').innerText = 'Result declaration वेळ set केलेली नाही.'; return; }
+  if(Date.now() < new Date(dec).getTime()){ document.getElementById('notDeclared').classList.remove('d-none'); document.getElementById('notDeclared').innerHTML = `Result will be declared on <b>${formatLocal(dec)}</b>`; return; }
+
+  const rec = loadRecords().find(r=> r.class===cls && r.roll===roll);
+  if(!rec){ document.getElementById('notFound').classList.remove('d-none'); return; }
+  lastViewed = rec; renderStudent(rec);
+}
+function renderStudent(rec){
+  document.getElementById('studentResult').classList.remove('d-none');
+  document.getElementById('sr_name').innerText = rec.name;
+  document.getElementById('sr_meta').innerText = `Class ${rec.class} • Roll ${rec.roll}`;
+  document.getElementById('sr_dob').innerText = `Date of Birth: ${rec.dob?rec.dob:'-'}` + (rec.gender?(' • '+rec.gender):'');
+  const tbody = document.getElementById('sr_table'); tbody.innerHTML = '';
+  let total=0, out=0;
+  rec.subjects.forEach(s => { tbody.insertAdjacentHTML('beforeend', `<tr><td>${escapeHtml(s.subject)}</td><td>${s.marks}</td><td>${s.outOf}</td><td>${escapeHtml(s.grade)}</td><td>${escapeHtml(s.remark)}</td></tr>`); total+=Number(s.marks||0); out+=Number(s.outOf||0); });
+  const perc = out?((total/out)*100).toFixed(2):'0.00';
+  document.getElementById('sr_summary').innerHTML = `Total: <b>${total}</b> / ${out} • Percentage: <b>${perc}%</b> • Status: <b>${escapeHtml(rec.status)}</b>`;
+}
+
+/* ===== Graph ===== */
+let chart = null;
+function showGraph(){
+  if(!lastViewed) return alert('First view a student');
+  const labels = lastViewed.subjects.map(s=>s.subject);
+  const marks = lastViewed.subjects.map(s=>Number(s.marks||0));
+  const out = lastViewed.subjects.map(s=>Number(s.outOf||0));
+  const ctx = document.getElementById('chartCanvas').getContext('2d');
+  if(chart) chart.destroy();
+  chart = new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets: [{ label:'Marks', data:marks, backgroundColor:'rgba(13,110,253,0.85)' }, { label:'Out Of', data:out, backgroundColor:'rgba(108,117,125,0.45)' }] },
+    options: { responsive:true, scales:{ y:{ beginAtZero:true } } }
+  });
+  const modal = new bootstrap.Modal(document.getElementById('graphModal')); modal.show();
+}
+
+/* ===== Official PDF ===== */
+function downloadPDF(){
+  if(!lastViewed) return alert('First view a student');
+  const rec = lastViewed;
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit:'pt', format:'a4' });
+  const pw = doc.internal.pageSize.getWidth();
+  // Header
+  doc.setFontSize(14); doc.setFont('helvetica','bold'); doc.text('DYANSHWAR VISYALAYA & JR.COLLEGE ( WARUD CHAKRPAN) SENGAON', pw/2, 40, { align:'center' });
+  doc.setFontSize(11); doc.setFont('helvetica','normal'); doc.text('Secondary School Certificate — Marksheet (Demo)', pw/2, 58, { align:'center' });
+  doc.line(40,70,pw-40,70);
+  // Meta
+  doc.setFontSize(10);
+  doc.text(`Name: ${rec.name}`,50,92);
+  doc.text(`DOB: ${rec.dob?rec.dob:'-'}`,50,108);
+  doc.text(`Class: ${rec.class}`,50,124);
+  doc.text(`Roll No: ${rec.roll}`,pw-180,92);
+  doc.text(`Generated: ${new Date().toLocaleString()}`,pw-180,108);
+  // Table
+  const table = rec.subjects.map(s=> [s.subject,String(s.marks),String(s.outOf),s.grade||'',s.remark||'']);
+  doc.autoTable({ startY:150, head:[['Subject','Marks','Out Of','Grade','Remark']], body:table, styles:{fontSize:10,cellPadding:6}, headStyles:{fillColor:[13,110,253],textColor:255,halign:'center'} });
+  const fy = doc.lastAutoTable?doc.lastAutoTable.finalY+12:200;
+  let total = rec.subjects.reduce((a,b)=>a+Number(b.marks||0),0);
+  let outTotal = rec.subjects.reduce((a,b)=>a+Number(b.outOf||0),0);
+  const perc = outTotal?((total/outTotal)*100).toFixed(2):'0.00';
+  doc.setFontSize(11);
+  doc.text(`Total: ${total} / ${outTotal}`,50,fy+10);
+  doc.text(`Percentage: ${perc}%`,50,fy+26);
+  doc.text(`Status: ${rec.status}`,50,fy+42);
+  doc.text(`Remark: ${rec.remark||'-'}`,50,fy+58);
+  doc.line(pw-220,fy+70,pw-60,fy+70);
+  doc.text('Signature of Teacher', pw-200,fy+88);
+  const file = `${rec.class}_${rec.roll}_${rec.name}_Marksheet.pdf`.replaceAll(' ','_');
+  doc.save(file);
+}
+
+/* ===== Export CSV & Clear ===== */
+function exportCSV(){
+  const recs = loadRecords(); if(recs.length===0) return alert('No data');
+  const rows = [['class','roll','name','dob','gender','subject','marks','outOf','grade','remark']];
+  recs.forEach(r=> r.subjects.forEach(s=> rows.push([r.class,r.roll,r.name,r.dob||'',r.gender||'',s.subject,s.marks,s.outOf,s.grade,s.remark])));
+  const csv = rows.map(r=> r.map(x=> `"${String(x||'').replaceAll('"','""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv],{type:'text/csv'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href=url; a.download='dv_ssc_data.csv'; a.click(); URL.revokeObjectURL(url);
+}
+function clearAll(){
+  if(!confirm('Remove all data (records, notices, declare)?')) return;
+  localStorage.removeItem(KEY_RECORDS); localStorage.removeItem(KEY_NOTICES); localStorage.removeItem(KEY_DECLARE);
+  renderHome(); renderTeacherNotices(); renderTeacherTable(); alert('All data removed');
+}
+
+/* ===== Expose helper functions used by inline handlers ===== */
+window.addSubjectRow = addSubjectRow;
+window.selectClassTab = selectClassTab;
+window.editRecord = editRecord;
+window.deleteRecord = deleteRecord;
+window.teacherLogin = teacherLogin;
+window.logout = logout;
+window.setDeclaration = setDeclaration;
+window.addNotice = addNotice;
+window.exportCSV = exportCSV;
+window.clearAll = clearAll;
+window.navHome = navHome;
+window.navStudent = navStudent;
+window.navTeacherLogin = navTeacherLogin;
+window.studentSearch = studentSearch;
+window.showGraph = showGraph;
+window.downloadPDF = downloadPDF;
+
+/* ===== Utility wrappers for compatibility (redefine load/save to ensure keys exist) ===== */
+function loadNotices(){ return JSON.parse(localStorage.getItem(KEY_NOTICES) || '[]'); }
+function saveNotices(a){ localStorage.setItem(KEY_NOTICES, JSON.stringify(a)); }
+function loadRecords(){ return JSON.parse(localStorage.getItem(KEY_RECORDS) || '[]'); }
+function saveRecords(a){ localStorage.setItem(KEY_RECORDS, JSON.stringify(a)); }
+function loadDeclare(){ return localStorage.getItem(KEY_DECLARE) || ''; }
+function saveDeclare(s){ localStorage.setItem(KEY_DECLARE, s || ''); }
+</script>
+</body>
+</html>
